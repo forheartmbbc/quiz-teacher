@@ -1,0 +1,85 @@
+<!-- quiz-teacher.html -->
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>老師控制頁</title>
+  <style>
+    body {
+      font-family: "Arial", sans-serif;
+      background-color: #e3f2fd;
+      color: #000;
+      padding: 30px;
+      font-size: 1.5rem;
+    }
+    h1 {
+      font-size: 2.2rem;
+      color: #1976d2;
+    }
+    button {
+      padding: 15px 30px;
+      margin: 10px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      background-color: #4fc3f7;
+    }
+    button:hover {
+      background-color: #0288d1;
+    }
+    .winner {
+      font-size: 2rem;
+      color: #388e3c;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>老師控制台</h1>
+  <div id="question">題目載入中...</div>
+  <div class="winner" id="winner">最快答題學生：尚未答題</div>
+  <div>
+    <button onclick="prev()">⬅️ 上一題</button>
+    <button onclick="next()">➡️ 下一題</button>
+    <button onclick="clearWinner()">🔁 清空最快答題者</button>
+  </div>
+
+  <script>
+    (function() {
+      const teacherApi = 'https://script.google.com/macros/s/AKfycbz1_qQzXiguVCVtG_cqCyF6Z1O0Gj9fdtdgGuNO0KMAA8BX5uh2dSA24_JIJ0PP1L5i/exec';
+
+      const load = () => {
+        fetch(`${teacherApi}?action=getQuestion`)
+          .then(res => res.json())
+          .then(data => {
+            document.getElementById('question').textContent = `第 ${data.index + 1} 題：${data.question}`;
+          });
+
+        fetch(`${teacherApi}?action=getWinner`)
+          .then(res => res.text())
+          .then(name => {
+            document.getElementById('winner').textContent = name ? `最快答題學生：${name}` : '最快答題學生：尚未答題';
+          });
+      };
+
+      window.next = () => {
+        fetch(`${teacherApi}?action=next`).then(load);
+      };
+
+      window.prev = () => {
+        fetch(`${teacherApi}?action=prev`).then(load);
+      };
+
+      window.clearWinner = () => {
+        fetch(`${teacherApi}?action=clear`).then(load);
+      };
+
+      setInterval(load, 2000);
+      load();
+    })();
+  </script>
+</body>
+</html>
