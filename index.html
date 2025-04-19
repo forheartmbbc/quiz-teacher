@@ -50,17 +50,37 @@
   <script>
     const apiUrl = 'https://script.google.com/macros/s/AKfycbyKz1fGnJo7xk0ZfCw7UR8B6ZHx4B-3SuMpCmUX_1Xnsd0C5Zt-8Xzsomh-J0HmwOtxCg/exec';
 
-    function loadData() {
-      fetch(apiUrl + '?action=getTeacherView')
-        .then(res => res.json())
-        .then(data => {
-          document.getElementById('question').innerHTML = `<div class="highlight">第 ${data.qnum} 題：</div>${data.question}<br><br>
-            A. ${data.options[0]}<br>B. ${data.options[1]}<br>C. ${data.options[2]}<br>D. ${data.options[3]}`;
-          document.getElementById('answer').textContent = `正解：${['A','B','C','D'][data.correct]}`;
-          const topList = data.top3.map((s, i) => `🥇🥈🥉`.charAt(i) + ` ${s.name}（${s.time} 秒）`).join('<br>');
-          document.getElementById('top3').innerHTML = `最快答對前三名：<br>${topList || "（尚無答對者）"}`;
-        });
-    }
+    function loadData() .then(data => {
+  if (!Array.isArray(data.options) || typeof data.correct !== 'number') {
+    document.getElementById('question').innerHTML = `⚠️ 題目資料錯誤`;
+    document.getElementById('answer').textContent = `正解：-`;
+    return;
+  }
+
+  document.getElementById('question').innerHTML = `
+    <div class="highlight">第 ${data.qnum} 題：</div>
+    ${data.question}<br><br>
+    A. ${data.options[0]}<br>
+    B. ${data.options[1]}<br>
+    C. ${data.options[2]}<br>
+    D. ${data.options[3]}
+  `;
+
+  document.getElementById('answer').textContent = `正解：${['A','B','C','D'][data.correct]}`;
+
+  let topList = "（尚無答對者）";
+  if (Array.isArray(data.top3) && data.top3.length > 0) {
+    topList = data.top3.map((s, i) => `🥇🥈🥉`.charAt(i) + ` ${s.name}（${s.time} 秒）`).join('<br>');
+  }
+  document.getElementById('top3').innerHTML = `最快答對前三名：<br>${topList}`;
+})
+.catch(err => {
+  console.error("資料載入錯誤：", err);
+  document.getElementById('question').textContent = '❌ 無法載入題目資料';
+  document.getElementById('answer').textContent = '正解：-';
+  document.getElementById('top3').textContent = '無法取得答題資料';
+});
+
 
     function changeQuestion(offset) {
       fetch(apiUrl, {
