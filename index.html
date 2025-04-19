@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>搶答系統 - 教師端</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      background-color: #fffaf0;
+      text-align: center;
+    }
+    h1 {
+      font-size: 36px;
+    }
+    .question, .answer, .top3 {
+      font-size: 24px;
+      margin: 20px 0;
+    }
+    .btn {
+      font-size: 24px;
+      margin: 10px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    .prev { background-color: #3498db; color: white; }
+    .clear { background-color: #f39c12; color: black; }
+    .next { background-color: #2ecc71; color: white; }
+    .highlight {
+      font-size: 28px;
+      color: #e74c3c;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>地震搶答系統（教師端）</h1>
+  <div class="question" id="question">載入中...</div>
+  <div class="answer" id="answer">正解：-</div>
+  <div class="top3" id="top3">最快答對前三名：</div>
+  <div>
+    <button class="btn prev" onclick="changeQuestion(-1)">⬅️ 上一題</button>
+    <button class="btn clear" onclick="clearAnswers()">🗑 清除作答</button>
+    <button class="btn next" onclick="changeQuestion(1)">➡️ 下一題</button>
+  </div>
+
+  <script>
+    const apiUrl = 'https://script.google.com/macros/s/AKfycbz1_qQzXiguVCVtG_cqCyF6Z1O0Gj9fdtdgGuNO0KMAA8BX5uh2dSA24_JIJ0PP1L5i/exec';
+
+    function loadData() {
+      fetch(apiUrl + '?action=getTeacherView')
+        .then(res => res.json())
+        .then(data => {
+          document.getElementById('question').innerHTML = `<div class="highlight">第 ${data.qnum} 題：</div>${data.question}<br><br>
+            A. ${data.options[0]}<br>B. ${data.options[1]}<br>C. ${data.options[2]}<br>D. ${data.options[3]}`;
+          document.getElementById('answer').textContent = `正解：${['A','B','C','D'][data.correct]}`;
+          const topList = data.top3.map((s, i) => `🥇🥈🥉`.charAt(i) + ` ${s.name}（${s.time} 秒）`).join('<br>');
+          document.getElementById('top3').innerHTML = `最快答對前三名：<br>${topList || "（尚無答對者）"}`;
+        });
+    }
+
+    function changeQuestion(offset) {
+      fetch(apiUrl, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'changeQuestion', offset })
+      }).then(loadData);
+    }
+
+    function clearAnswers() {
+      fetch(apiUrl, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'clearAnswers' })
+      }).then(loadData);
+    }
+
+    loadData();
+    setInterval(loadData, 3000); // 自動更新
+  </script>
+</body>
+</html>
